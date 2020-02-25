@@ -1,5 +1,5 @@
 /*****************************************************************************\
-* (c) Copyright 2010-2019 CERN for the benefit of the LHCb Collaboration      *
+* (c) Copyright 2000-2019 CERN for the benefit of the LHCb Collaboration      *
 *                                                                             *
 * This software is distributed under the terms of the GNU General Public      *
 * Licence version 3 (GPL Version 3), copied verbatim in the file "COPYING".   *
@@ -8,45 +8,39 @@
 * granted to it by virtue of its status as an Intergovernmental Organization  *
 * or submit itself to any jurisdiction.                                       *
 \*****************************************************************************/
-#ifndef DecayTreeTupleTracking_TupleToolCaloInfo_H
-#define DecayTreeTupleTracking_TupleToolCaloInfo_H 1
+// $Id: MCTupleToolPhotonDaughters.h, jadevrie $
 
-// Include files
-// from Gaudi
+#ifndef MCTUPLETOOLPHOTONDAUGHTERS_H
+#define MCTUPLETOOLPHOTONDAUGHTERS_H 1
+
 #include "DecayTreeTupleBase/TupleToolBase.h"
+#include "Event/MCParticle.h"            
+#include "Kernel/IMCParticleTupleTool.h" 
 #include "GaudiKernel/ToolHandle.h"
-#include "Kernel/IParticleTupleTool.h" // Interface
-#include "LHCbMath/ValueWithError.h"
 #include "CaloDet/DeCalorimeter.h"
 #include "Event/CaloCluster.h"
 
-/** @class TupleToolCaloInfo TupleToolCaloInfo.h
- *  \brief TupleTool to calculate ECAL deposits around the track
- *
- *  @author Jacco de Vries
- *  @date   2019-11-07
- */
+#include "TrackInterfaces/ITrackExtrapolator.h"
 
-// Forward declarations
 class ITrackExtrapolator;
 
-class TupleToolCaloInfo : public TupleToolBase, virtual public IParticleTupleTool {
+class MCTupleToolPhotonDaughters : public TupleToolBase, virtual public IMCParticleTupleTool {
 
 public:
   /// Standard constructor
-  TupleToolCaloInfo( const std::string& type, const std::string& name, const IInterface* parent );
+  MCTupleToolPhotonDaughters( const std::string& type, const std::string& name, const IInterface* parent );
 
-  virtual ~TupleToolCaloInfo(); ///< Destructor
-
+  virtual ~MCTupleToolPhotonDaughters(); ///< Destructor
   StatusCode initialize() override;
-
-public:
-  StatusCode fill( const LHCb::Particle*, const LHCb::Particle*, const std::string&, Tuples::Tuple& ) override;
+  StatusCode fill( const LHCb::MCParticle*, const LHCb::MCParticle*, const std::string&, Tuples::Tuple& ) override;
 
 private:
   DeCalorimeter* m_calo;  
+  ITrackExtrapolator*  m_extrapolator;
+  std::string m_extrapolatorType = "TrackMasterExtrapolator";
 
+  Gaudi::XYZPoint positionAtEcal( const LHCb::Track* ) ;
 
 };
+#endif // MCTUPLETOOLPHOTONDAUGHTERS_H
 
-#endif // DecayTreeTupleTracking_TupleToolCaloInfo_H

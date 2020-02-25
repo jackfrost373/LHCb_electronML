@@ -22,12 +22,15 @@ tup.Inputs = ["Phys/StdAllLooseElectrons/Particles"]
 
 tupletools = []
 tupletools.append("TupleToolKinematic")  # Momenta
-tupletools.append("TupleToolMCTruth")    # MC Truth info
 tupletools.append("TupleToolBremInfo")   # Info on photon that was BremAdded
-tupletools.append("TupleToolCaloInfo")   # New tupletool to put CALO info per track
-#tupletools.append("TupleToolEventInfo")  # Event info
+tupletools.append("TupleToolCaloInfo")   # (custom) dump of ECAL clusters
+tupletools.append("TupleToolInfoAtCalo") # (custom) info on extrapolated position at ECAL
 tup.ToolList =  tupletools[:]
+
 tup.addTool(TupleToolDecay, name="eminus")
+
+mctruthtool = tup.eminus.addTupleTool("TupleToolMCTruth")
+mctruthtool.ToolList += ["MCTupleToolPhotonDaughters"] # (custom) info of MC bremphoton daughters
 
 nobremtool = tup.eminus.addTupleTool('LoKi::Hybrid::TupleTool/nobremtool')
 nobremtool.Variables = {

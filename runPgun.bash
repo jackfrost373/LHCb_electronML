@@ -18,7 +18,7 @@
 
 
 ### ROOT analysis
-lb-run ROOT python analysis/plotEcal.py
+#lb-run ROOT python analysis/plotEcal.py
 
 
 

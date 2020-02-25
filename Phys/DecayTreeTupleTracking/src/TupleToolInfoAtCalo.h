@@ -8,8 +8,8 @@
 * granted to it by virtue of its status as an Intergovernmental Organization  *
 * or submit itself to any jurisdiction.                                       *
 \*****************************************************************************/
-#ifndef DecayTreeTupleTracking_TupleToolCaloInfo_H
-#define DecayTreeTupleTracking_TupleToolCaloInfo_H 1
+#ifndef DecayTreeTupleTracking_TupleToolInfoAtCalo_H
+#define DecayTreeTupleTracking_TupleToolInfoAtCalo_H 1
 
 // Include files
 // from Gaudi
@@ -20,7 +20,9 @@
 #include "CaloDet/DeCalorimeter.h"
 #include "Event/CaloCluster.h"
 
-/** @class TupleToolCaloInfo TupleToolCaloInfo.h
+#include "TrackInterfaces/ITrackExtrapolator.h"
+
+/** @class TupleToolInfoAtCalo TupleToolInfoAtCalo.h
  *  \brief TupleTool to calculate ECAL deposits around the track
  *
  *  @author Jacco de Vries
@@ -30,13 +32,13 @@
 // Forward declarations
 class ITrackExtrapolator;
 
-class TupleToolCaloInfo : public TupleToolBase, virtual public IParticleTupleTool {
+class TupleToolInfoAtCalo : public TupleToolBase, virtual public IParticleTupleTool {
 
 public:
   /// Standard constructor
-  TupleToolCaloInfo( const std::string& type, const std::string& name, const IInterface* parent );
+  TupleToolInfoAtCalo( const std::string& type, const std::string& name, const IInterface* parent );
 
-  virtual ~TupleToolCaloInfo(); ///< Destructor
+  virtual ~TupleToolInfoAtCalo(); ///< Destructor
 
   StatusCode initialize() override;
 
@@ -45,8 +47,11 @@ public:
 
 private:
   DeCalorimeter* m_calo;  
+  ITrackExtrapolator*  m_extrapolator;
+  std::string m_extrapolatorType = "TrackMasterExtrapolator";
 
+  Gaudi::XYZPoint positionAtEcal( const LHCb::Track* ) ;
 
 };
 
-#endif // DecayTreeTupleTracking_TupleToolCaloInfo_H
+#endif // DecayTreeTupleTracking_TupleToolInfoAtCalo_H
