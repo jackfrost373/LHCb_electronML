@@ -8,7 +8,6 @@
 * granted to it by virtue of its status as an Intergovernmental Organization  *
 * or submit itself to any jurisdiction.                                       *
 \*****************************************************************************/
-// $Id: MCTupleToolPhotonDaughters.h, jadevrie $
 
 #ifndef MCTUPLETOOLPHOTONDAUGHTERS_H
 #define MCTUPLETOOLPHOTONDAUGHTERS_H 1
@@ -21,6 +20,13 @@
 #include "Event/CaloCluster.h"
 
 #include "TrackInterfaces/ITrackExtrapolator.h"
+
+/** @class MCTupleToolPhotonDaughters MCTupleToolPhotonDaughters.h
+ *  \brief MCTupleTool to calculate (brem)photon daughter positions at ECAL
+ *
+ *  @author Jacco de Vries
+ *  @date   2020-02-25
+ */
 
 class ITrackExtrapolator;
 

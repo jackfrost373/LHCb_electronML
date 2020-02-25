@@ -30,7 +30,6 @@
 // 2018-11-07 : Jacco de Vries
 //              j.devries@cern.ch
 //
-// Inspired by Phys/DaVinciTools BremAdder
 //-----------------------------------------------------------------------------
 
 // Declaration of the Tool Factory

@@ -23,7 +23,7 @@
 #include "TrackInterfaces/ITrackExtrapolator.h"
 
 /** @class TupleToolInfoAtCalo TupleToolInfoAtCalo.h
- *  \brief TupleTool to calculate ECAL deposits around the track
+ *  \brief TupleTool to extrapolate track position to ECAL
  *
  *  @author Jacco de Vries
  *  @date   2019-11-07

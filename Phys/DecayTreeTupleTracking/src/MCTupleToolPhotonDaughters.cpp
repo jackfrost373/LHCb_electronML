@@ -31,8 +31,11 @@ using namespace LHCb;
 //-----------------------------------------------------------------------------
 // Implementation file for class : MCTupleToolPhotonDaughters
 //
-// 2009-01-19 : Patrick Koppenburg
+// 2020-02-25 : Jacco de Vries
+//              j.devries@cern.ch
+//
 //-----------------------------------------------------------------------------
+
 
 // Declaration of the Tool Factory
 DECLARE_COMPONENT( MCTupleToolPhotonDaughters )

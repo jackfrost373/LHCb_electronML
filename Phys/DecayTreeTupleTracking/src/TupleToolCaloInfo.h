@@ -21,7 +21,7 @@
 #include "Event/CaloCluster.h"
 
 /** @class TupleToolCaloInfo TupleToolCaloInfo.h
- *  \brief TupleTool to calculate ECAL deposits around the track
+ *  \brief TupleTool to dump ECAL deposits into an ntuple
  *
  *  @author Jacco de Vries
  *  @date   2019-11-07
