@@ -15,7 +15,7 @@
 // from Gaudi
 #include "DecayTreeTupleBase/TupleToolBase.h"
 #include "GaudiKernel/ToolHandle.h"
-#include "Kernel/IParticleTupleTool.h" // Interface
+#include "Kernel/IEventTupleTool.h" // Interface
 #include "LHCbMath/ValueWithError.h"
 #include "CaloDet/DeCalorimeter.h"
 #include "Event/CaloCluster.h"
@@ -27,10 +27,7 @@
  *  @date   2019-11-07
  */
 
-// Forward declarations
-class ITrackExtrapolator;
-
-class TupleToolCaloInfo : public TupleToolBase, virtual public IParticleTupleTool {
+class TupleToolCaloInfo : public TupleToolBase, virtual public IEventTupleTool {
 
 public:
   /// Standard constructor
@@ -41,7 +38,7 @@ public:
   StatusCode initialize() override;
 
 public:
-  StatusCode fill( const LHCb::Particle*, const LHCb::Particle*, const std::string&, Tuples::Tuple& ) override;
+  StatusCode fill( Tuples::Tuple& ) override;
 
 private:
   DeCalorimeter* m_calo;  

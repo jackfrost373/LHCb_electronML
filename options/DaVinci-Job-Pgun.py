@@ -20,19 +20,17 @@ tup.Decay = '[e-]CC'
 tup.Inputs = ["Phys/StdAllLooseElectrons/Particles"]
 #tup.ReFitPVs = True
 
-tupletools = []
-tupletools.append("TupleToolKinematic")  # Momenta
-tupletools.append("TupleToolBremInfo")   # Info on photon that was BremAdded
-tupletools.append("TupleToolCaloInfo")   # (custom) dump of ECAL clusters
-tupletools.append("TupleToolInfoAtCalo") # (custom) info on extrapolated position at ECAL
-tup.ToolList =  tupletools[:]
 
-tup.addTool(TupleToolDecay, name="eminus")
+tup.ToolList = []
+tup.addTupleTool("TupleToolKinematic")  # Momenta
+tup.addTupleTool("TupleToolBremInfo")   # Info on photon that was BremAdded
+tup.addTupleTool("TupleToolCaloInfo")   # (custom) dump of ECAL clusters
+tup.addTupleTool("TupleToolInfoAtCalo") # (custom) info on extrapolated position at ECAL
 
-mctruthtool = tup.eminus.addTupleTool("TupleToolMCTruth")
+mctruthtool = tup.addTupleTool("TupleToolMCTruth")
 mctruthtool.ToolList += ["MCTupleToolPhotonDaughters"] # (custom) info of MC bremphoton daughters
 
-nobremtool = tup.eminus.addTupleTool('LoKi::Hybrid::TupleTool/nobremtool')
+nobremtool = tup.addTupleTool('LoKi::Hybrid::TupleTool/nobremtool')
 nobremtool.Variables = {
     'nobrem_P'  : 'PPINFO(504,-100,-200)',
     'nobrem_PT' : 'PPINFO(505,-100,-200)',

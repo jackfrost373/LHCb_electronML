@@ -33,3 +33,7 @@ cp ../Phys/DecayTreeTupleTracking/src/* ./Phys/DecayTreeTupleTracking/src/
 make
 
 cd ..
+
+mkdir input
+mkdir output
+

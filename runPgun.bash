@@ -14,7 +14,7 @@
 
 
 ### DAVINCI
-./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job.py
+./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job-Pgun.py
 
 
 ### ROOT analysis

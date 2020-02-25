@@ -73,72 +73,87 @@ StatusCode MCTupleToolPhotonDaughters::fill( const LHCb::MCParticle*, const LHCb
                                        Tuples::Tuple& tuple ) {
   const std::string prefix = fullName( head );
   bool              test   = true;
+    
+  std::vector<LHCb::MCParticle*> photondaughters;
 
   if ( mcp ) {
 
     // Find all photon daughters of particle
-    std::vector<LHCb::MCParticle*> photondaughters;
     const auto mcparticles = get<LHCb::MCParticles>( LHCb::MCParticleLocation::Default );
     for(auto  mcparticle = mcparticles -> begin(); mcparticle != mcparticles -> end(); ++mcparticle) {
 
-      if (not (*mcparticle) -> particleID() == LHCb::ParticleID(22) ) continue; 
+      if (!( (*mcparticle) -> particleID() == LHCb::ParticleID(22) )) continue; 
       //info() << " - is photon" << endmsg;
       
-      mother = (*mcparticle) -> mother();
-      if (not mother) continue;
+      auto mother = (*mcparticle) -> mother();
+      if (!mother) continue;
       //info() << "  - is secondary" << endmsg;
       
-      if ( (*mcparticle) -> originVertex() -> position().Z() > 10000 ) continue;
-      //info() << "   - created before calo" << endmsg;
+      if ( (*mcparticle) -> originVertex() -> position().Z() > 9000 ) continue;
+      // Because B-field is small, and past T3 we won't have any useful strack states anyway
       
-      motherorivx = mother -> originVertex();
-      mcporivx = mcp -> originVertex();
-
-      //if (!( mother -> particleID() == LHCb::ParticleID(11) )) continue;
-      //info() << "    - created by electron" << endmsg;
-      //info() << "     mcp    orivx: " << mcporivx -> position()   << endmsg;
-      //info() << "     mother orivx: " << motherorivx ->position() << endmsg;
+      auto motherorivx = mother -> originVertex();
+      auto mcporivx = mcp -> originVertex();
 
       if( motherorivx -> position().Z() == mcporivx -> position().Z() && 
           motherorivx -> position().X() == mcporivx -> position().X() &&
           motherorivx -> position().Y() == mcporivx -> position().Y() &&
-          mother -> p()                 == mcp -> p() && 
-          mother -> pseudoRapidity()    == mcp -> pseudoRapidity() && 
+          //mother -> p()                 == mcp -> p() && 
+          //mother -> pseudoRapidity()    == mcp -> pseudoRapidity() && 
           mother -> particleID()        == mcp -> particleID()   ) { 
 
-        info() << "    - is daughter! " << (*mcparticle) -> particleID() << endmsg;
+        //info() << "    - is daughter! " << (*mcparticle) -> particleID() << endmsg;
         photondaughters.push_back( *mcparticle );
-        info() << "P is " << (*mcparticle) -> p() << endmsg;
-        info() << "PT is " << (*mcparticle) -> pt() << endmsg;
-        info() << "eta is " << (*mcparticle) -> pseudoRapidity() << endmsg;
-        info() << "orivx_z is " << (*mcparticle) -> originVertex() -> position().Z() << endmsg;
+
       }
     } // end of loop over mcparticles 
-
   }
 
-  //test &= tuple->column( prefix + "_TRUEP_", 1 );
-  //test &= tuple->column( prefix + "_TRUEPT", 1 );
+  //test &= tuple->column( prefix + "_MCphotondaughters_N", photondaughters.size() );
+  test &= tuple->farray( prefix + "_MCphotondaughters_P"  , std::mem_fun(&LHCb::MCParticle::p),
+                         prefix + "_MCphotondaughters_PT" , std::mem_fun(&LHCb::MCParticle::pt),
+                         prefix + "_MCphotondaughters_ETA", std::mem_fun(&LHCb::MCParticle::pseudoRapidity),
+                         photondaughters.begin(), photondaughters.end(), prefix + "_MCphotondaughters_N", 20 );
+
+  std::vector<double> orivxX, orivxY, orivxZ;
+  std::transform(photondaughters.begin(), photondaughters.end(), std::back_inserter(orivxX), 
+      [](LHCb::MCParticle* daughter) { return daughter -> originVertex() -> position().X(); } );
+  std::transform(photondaughters.begin(), photondaughters.end(), std::back_inserter(orivxY), 
+      [](LHCb::MCParticle* daughter) { return daughter -> originVertex() -> position().Y(); } );
+  std::transform(photondaughters.begin(), photondaughters.end(), std::back_inserter(orivxZ), 
+      [](LHCb::MCParticle* daughter) { return daughter -> originVertex() -> position().Z(); } );
+  test &= tuple->farray( prefix + "_MCphotondaughters_orivx_X", orivxX, prefix + "_MCphotondaughters_N", 20 );
+  test &= tuple->farray( prefix + "_MCphotondaughters_orivx_Y", orivxY, prefix + "_MCphotondaughters_N", 20 );
+  test &= tuple->farray( prefix + "_MCphotondaughters_orivx_Z", orivxZ, prefix + "_MCphotondaughters_N", 20 );
+
+  std::vector<double> caloX, caloY;
+  std::transform(photondaughters.begin(), photondaughters.end(), std::back_inserter(caloX), 
+      [&](LHCb::MCParticle* daughter) { return MCTupleToolPhotonDaughters::positionAtEcal(daughter).X(); } );
+  std::transform(photondaughters.begin(), photondaughters.end(), std::back_inserter(caloY), 
+      [&](LHCb::MCParticle* daughter) { return MCTupleToolPhotonDaughters::positionAtEcal(daughter).Y(); } );
+  test &= tuple->farray( prefix + "_MCphotondaughters_ECAL_X", caloX, prefix + "_MCphotondaughters_N", 20 );
+  test &= tuple->farray( prefix + "_MCphotondaughters_ECAL_Y", caloY, prefix + "_MCphotondaughters_N", 20 );
 
   return StatusCode( test );
 }
 
 
-Gaudi::XYZPoint MCTupleToolPhotonDaughters::positionAtEcal( const LHCb::Track* track ) {
-  // Obtain position of track at ECAL. Inspired by CaloTools / Track2Calo
+Gaudi::XYZPoint MCTupleToolPhotonDaughters::positionAtEcal( const LHCb::MCParticle* photon ) {
+  // Obtain position of photon at ECAL
 
   Gaudi::XYZPoint caloXYZpoint;
-  
-  CaloPlane::Plane plane = CaloPlane::ShowerMax;
-  ROOT::Math::Plane3D refPlane = m_calo->plane( plane );
-  LHCb::State calostate( track->closestState( refPlane ) );
-  LHCb::ParticleID pid = LHCb::ParticleID(11);
-  double m_tolerance;
-  
-  StatusCode sc = m_extrapolator -> propagate( calostate, refPlane, m_tolerance, pid );
-  if ( sc.isFailure() ) return caloXYZpoint;
 
-  caloXYZpoint = Gaudi::XYZPoint( calostate.x(), calostate.y(), calostate.z() ); 
+  if (!( photon -> particleID() == LHCb::ParticleID(22) )) return caloXYZpoint;
+  
+  float zPos = 12500.;
+
+  auto orivx = photon -> originVertex() -> position();
+  auto lorentzvec = photon -> momentum();
+  auto zdiff = zPos - orivx.Z();
+  auto calox = orivx.X() + lorentzvec.Px() / lorentzvec.Pz() * zdiff;
+  auto caloy = orivx.Y() + lorentzvec.Py() / lorentzvec.Pz() * zdiff;
+
+  caloXYZpoint = Gaudi::XYZPoint( calox, caloy, zPos );
 
   return caloXYZpoint; 
 

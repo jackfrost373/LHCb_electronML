@@ -39,7 +39,7 @@ private:
   ITrackExtrapolator*  m_extrapolator;
   std::string m_extrapolatorType = "TrackMasterExtrapolator";
 
-  Gaudi::XYZPoint positionAtEcal( const LHCb::Track* ) ;
+  Gaudi::XYZPoint positionAtEcal( const LHCb::MCParticle* photon ) ;
 
 };
 #endif // MCTUPLETOOLPHOTONDAUGHTERS_H

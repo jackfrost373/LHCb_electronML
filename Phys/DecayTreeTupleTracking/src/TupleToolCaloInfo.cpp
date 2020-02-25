@@ -57,8 +57,7 @@ StatusCode TupleToolCaloInfo::initialize() {
 }
 
 //=============================================================================
-StatusCode TupleToolCaloInfo::fill( const LHCb::Particle*, const LHCb::Particle*, const std::string&,
-                                     Tuples::Tuple& tuple ) {
+StatusCode TupleToolCaloInfo::fill( Tuples::Tuple& tuple ) {
   if ( msgLevel( MSG::VERBOSE ) ) verbose() << " filling particle " << endmsg;
   bool              test   = true;
 
@@ -72,9 +71,9 @@ StatusCode TupleToolCaloInfo::fill( const LHCb::Particle*, const LHCb::Particle*
     cluster_e.push_back( position.e() );
   }
 
-  test &= tuple -> farray ( "ECAL_cluster_x_arr", cluster_x, "N_ECAL_clusters", 500 );
-  test &= tuple -> farray ( "ECAL_cluster_y_arr", cluster_y, "N_ECAL_clusters", 500 );
-  test &= tuple -> farray ( "ECAL_cluster_e_arr", cluster_e, "N_ECAL_clusters", 500 );
+  test &= tuple -> farray ( "ECAL_cluster_x_arr", cluster_x, "N_ECAL_clusters", 2000 );
+  test &= tuple -> farray ( "ECAL_cluster_y_arr", cluster_y, "N_ECAL_clusters", 2000 );
+  test &= tuple -> farray ( "ECAL_cluster_e_arr", cluster_e, "N_ECAL_clusters", 2000 );
 
 
   return StatusCode::SUCCESS;
