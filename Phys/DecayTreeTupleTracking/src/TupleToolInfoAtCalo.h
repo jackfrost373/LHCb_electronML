@@ -51,6 +51,10 @@ private:
   std::string m_extrapolatorType = "TrackMasterExtrapolator";
 
   Gaudi::XYZPoint positionAtEcal( const LHCb::Track* ) ;
+  
+  const LHCb::State*    usedState( const LHCb::Track* track ) const;
+  const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3>
+                          getPos( const LHCb::ProtoParticle* proto, const LHCb::State::Location& state, double zcalo, double def = 0 ) const;
 
 };
 

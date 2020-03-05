@@ -19,19 +19,28 @@ cECAL = ROOT.TCanvas("cECAL")
 
 for entry in tree :
 
-  clusterxlist = entry.ECAL_cluster_x_arr
-  clusterylist = entry.ECAL_cluster_y_arr
-  clusterelist = entry.ECAL_cluster_e_arr
+  #clusterxlist = entry.ECAL_cluster_x_arr
+  #clusterylist = entry.ECAL_cluster_y_arr
+  #clusterelist = entry.ECAL_cluster_e_arr
+  photonxlist = entry.ECAL_photon_x_arr
+  photonylist = entry.ECAL_photon_y_arr
+  photonptlist = entry.ECAL_photon_PT_arr
   
-  hECAL = ROOT.TH2F("hECAL","ECAL clusters", bins,-4000,4000, bins,-3200,3200)
-  for i in range(entry.N_ECAL_clusters) :
-    hECAL.Fill( clusterxlist[i], clusterylist[i], clusterelist[i] )
+  #hECAL = ROOT.TH2F("hECAL","ECAL clusters", bins,-4000,4000, bins,-3200,3200)
+  #for i in range(entry.N_ECAL_clusters) :
+  #  hECAL.Fill( clusterxlist[i], clusterylist[i], clusterelist[i] )
+  hECAL = ROOT.TH2F("hECAL","ECAL photons", bins, -4000,4000, bins,-3200,3200)
+  for i in range(entry.N_ECAL_photons) :
+    #if(entry.ECAL_photon_CL_arr[i] > 0.1 and entry.ECAL_photon_PT_arr[i] > 75.) : # BremAdder def. cuts
+      hECAL.Fill( photonxlist[i], photonylist[i], photonptlist[i] )
 
   hECAL.GetXaxis().SetTitle("x [mm]")
   hECAL.GetYaxis().SetTitle("y [mm]")
-  hECAL.GetZaxis().SetTitle("E")
+  #hECAL.GetZaxis().SetTitle("E")
+  hECAL.GetZaxis().SetTitle("PT")
   hECAL.SetMinimum(0.)
-  hECAL.SetMaximum(20000.)
+  #hECAL.SetMaximum(20000.)
+  hECAL.SetMaximum(1000.)
   hECAL.Draw("COLZ")
   cECAL.SetFixedAspectRatio()
 
@@ -41,6 +50,28 @@ for entry in tree :
   electrongraph.SetMarkerStyle(43)
   electrongraph.SetMarkerSize(3)
   electrongraph.Draw("Psame")
+  
+  electron_velo_x = entry.eminus_ECAL_velotrack_x 
+  electron_velo_y = entry.eminus_ECAL_velotrack_y 
+  electron_TT_x = entry.eminus_ECAL_TTtrack_x 
+  electron_TT_y = entry.eminus_ECAL_TTtrack_y 
+  if( electron_velo_x <= electron_TT_x ) : xslope = 1.
+  if( electron_velo_x > electron_TT_x ) : xslope = -1.
+  if( electron_velo_y <= electron_TT_y ) : yslope = 1.
+  if( electron_velo_y > electron_TT_y ) : yslope = -1.
+  electron_velo_x -= 2*xslope*entry.eminus_ECAL_velotrack_sprx
+  electron_velo_y -= 2*yslope*entry.eminus_ECAL_velotrack_spry
+  electron_TT_x += 2*xslope*entry.eminus_ECAL_TTtrack_sprx
+  electron_TT_y += 2*yslope*entry.eminus_ECAL_TTtrack_spry
+  electronvelograph = ROOT.TGraph(1, array('f',[electron_velo_x]), array('f',[electron_velo_y]))
+  electronvelograph.SetMarkerStyle(32)
+  electronvelograph.SetMarkerSize(1)
+  electronvelograph.Draw("Psame")
+  
+  electronTTgraph = ROOT.TGraph(1, array('f',[electron_TT_x]), array('f',[electron_TT_y]))
+  electronTTgraph.SetMarkerStyle(26)
+  electronTTgraph.SetMarkerSize(1)
+  electronTTgraph.Draw("Psame")
  
   if entry.eminus_MCphotondaughters_N > 0 :
     mcphotonxlist = entry.eminus_MCphotondaughters_ECAL_X
@@ -66,8 +97,8 @@ for entry in tree :
   if(entry.eminus_MCphotondaughters_N > 0) : 
     print(" * Has MC photon daughters: {0}".format(entry.eminus_MCphotondaughters_N))
     for i in range(entry.eminus_MCphotondaughters_N) :
-      print("  - E = {0:.0f}, origin = ({1:.2f},{2:.2f},{3:.2f}), atECAL = ({4:.2f},{5:.2f})".format(
-        entry.eminus_MCphotondaughters_P[i], 
+      print("  - PT = {0:.0f}, origin = ({1:.2f},{2:.2f},{3:.2f}), atECAL = ({4:.2f},{5:.2f})".format(
+        entry.eminus_MCphotondaughters_PT[i], 
         entry.eminus_MCphotondaughters_orivx_X[i], entry.eminus_MCphotondaughters_orivx_Y[i], entry.eminus_MCphotondaughters_orivx_Z[i], 
         entry.eminus_MCphotondaughters_ECAL_X[i], entry.eminus_MCphotondaughters_ECAL_Y[i] ))
 

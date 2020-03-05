@@ -16,6 +16,8 @@
 
 #include "Event/Track.h"
 #include "Event/CaloCluster.h"
+#include "Event/StateParameters.h"
+
 
 // local
 #include "TupleToolInfoAtCalo.h"
@@ -82,15 +84,38 @@ StatusCode TupleToolInfoAtCalo::fill( const LHCb::Particle*, const LHCb::Particl
     if ( msgLevel( MSG::DEBUG ) ) debug() << "Track not found for this particle" << endmsg;
     return StatusCode::SUCCESS;
   }
-
  
   // Get the position of the track at the Ecal
   const auto caloXYZ = TupleToolInfoAtCalo::positionAtEcal( track );
-  const auto x_at_calo = caloXYZ.X();
-  const auto y_at_calo = caloXYZ.Y();
+  test &= tuple -> column( prefix + "_ECAL_x", caloXYZ.X() );
+  test &= tuple -> column( prefix + "_ECAL_y", caloXYZ.Y() );
 
-  test &= tuple -> column( prefix + "_ECAL_x", x_at_calo );
-  test &= tuple -> column( prefix + "_ECAL_y", y_at_calo );
+
+  // Get position of Velo and TT extrapolated track at ECAL
+  Gaudi::Plane3D plane = m_calo->plane( CaloPlane::ShowerMax );
+  double         Hesse = plane.HesseDistance();
+  double m_z0          = -Hesse / plane.Normal().Z();
+
+  std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> fromV = getPos( protop, LHCb::State::ClosestToBeam, m_z0 );
+  std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> fromT = getPos( protop, LHCb::State::AtTT, m_z0, (double)StateParameters::ZEndTT );
+  if (!( fromV.first.z() == -1 * Gaudi::Units::km || fromT.first.z() == -1 * Gaudi::Units::km )) {
+  
+    Gaudi::XYZPoint     pfromVelo = fromV.first;
+    Gaudi::XYZPoint     pfromTT   = fromT.first;
+    Gaudi::SymMatrix3x3 cfromVelo = fromV.second;
+    Gaudi::SymMatrix3x3 cfromTT   = fromT.second;
+
+    test &= tuple -> column( prefix + "_ECAL_velotrack_x", pfromVelo.X() );
+    test &= tuple -> column( prefix + "_ECAL_velotrack_y", pfromVelo.Y() );
+    test &= tuple -> column( prefix + "_ECAL_velotrack_sprx", cfromVelo(0,0) );
+    test &= tuple -> column( prefix + "_ECAL_velotrack_spry", cfromVelo(1,1) );
+    test &= tuple -> column( prefix + "_ECAL_TTtrack_x",   pfromTT.X() );
+    test &= tuple -> column( prefix + "_ECAL_TTtrack_y",   pfromTT.Y() );
+    test &= tuple -> column( prefix + "_ECAL_TTtrack_sprx", cfromTT(0,0) );
+    test &= tuple -> column( prefix + "_ECAL_TTtrack_spry", cfromTT(1,1) );
+
+  }
+
 
   return StatusCode::SUCCESS;
 }
@@ -115,5 +140,73 @@ Gaudi::XYZPoint TupleToolInfoAtCalo::positionAtEcal( const LHCb::Track* track ) 
   return caloXYZpoint; 
 
 }
+
+
+
+const LHCb::State* TupleToolInfoAtCalo::usedState( const LHCb::Track* track ) const {
+  if ( !track ) Exception( "NULL track" );
+  const LHCb::State* uState = 0;
+  if ( msgLevel( MSG::VERBOSE ) ) { verbose() << "ChargedParticleMakerBase::usedState :: Looking for State" << endmsg; }
+  // default: closest to the beam:
+  if ( !uState ) { uState = track->stateAt( LHCb::State::ClosestToBeam ); }
+  // if not availabel: first measurementr
+  if ( !uState ) { uState = track->stateAt( LHCb::State::FirstMeasurement ); }
+  // backup
+  if ( !uState ) {
+    Warning( "No state closest to beam or at first measurement for track. Using first state instead", StatusCode{10},
+             1 )
+        .ignore();
+    uState = &track->firstState();
+  }
+  if ( msgLevel( MSG::VERBOSE ) ) {
+    verbose() << "Using '" << uState->location() << "' state at " << uState->position() << endmsg;
+  }
+  return uState;
+}
+
+
+
+
+
+const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> TupleToolInfoAtCalo::getPos( const LHCb::ProtoParticle*   proto,
+                                                                         const LHCb::State::Location& lstate,
+                                                                         double zcalo, double def ) const {
+  // shamelessly stolen from https://gitlab.cern.ch/lhcb/Phys/blob/run2-patches/Phys/DaVinciNeutralTools/src/BremAdder.cpp 
+
+  const LHCb::Track* tr = proto->track();
+  LHCb::State        nstate;
+  //-->ET get first available State instead of ClosestToBeam
+  if ( lstate == LHCb::State::ClosestToBeam ) {
+    nstate = *( usedState( tr ) );
+  } else {
+    const LHCb::State* state = tr->stateAt( lstate );
+    if ( state == NULL && def > 0 ) {
+      nstate        = LHCb::State();
+      StatusCode sc = m_extrapolator->propagate( *tr, def, nstate, LHCb::ParticleID( 11 ) );
+      if ( msgLevel( MSG::DEBUG ) ) debug() << "Extrapolating to: " << def << endmsg;
+      nstate.setLocation( lstate );
+      if ( sc.isFailure() ) {
+        Warning( "Extrapolator failed" ).ignore();
+        return std::make_pair( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3() );
+      }
+    } else if ( state == NULL ) {
+      Warning( "State points to NULL" ).ignore();
+      return std::make_pair( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3() );
+    } else
+      nstate = *state;
+  }
+
+  if ( msgLevel( MSG::DEBUG ) ) debug() << "State " << lstate << " " << nstate << endmsg;
+  double              tx    = nstate.tx();
+  double              ty    = nstate.ty();
+  double              x     = nstate.x() + tx * ( zcalo - nstate.z() );
+  double              y     = nstate.y() + ty * ( zcalo - nstate.z() );
+  Gaudi::XYZPoint     point = Gaudi::XYZPoint( x, y, zcalo );
+  Gaudi::SymMatrix3x3 cov = nstate.errPosition() + ( zcalo - nstate.z() ) * ( zcalo - nstate.z() ) * nstate.errSlopes();
+  return std::make_pair( point, cov );
+}
+
+
+
 
 

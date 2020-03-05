@@ -75,6 +75,39 @@ StatusCode TupleToolCaloInfo::fill( Tuples::Tuple& tuple ) {
   test &= tuple -> farray ( "ECAL_cluster_e_arr", cluster_e, "N_ECAL_clusters", 2000 );
 
 
+  // Get all photon candidates
+  //  inspired by https://gitlab.cern.ch/lhcb/Phys/blob/run2-patches/Phys/DaVinciNeutralTools/src/BremAdder.cpp
+  std::vector<double> photon_x, photon_y, photon_sprx, photon_spry, photon_CL, photon_PT;
+  const auto photons = get<LHCb::Particle::Range>( "/Event/Phys/StdVeryLooseAllPhotons/Particles" );
+  for ( LHCb::Particle::Range::const_iterator ip = photons.begin(); photons.end() != ip; ++ip ) {
+    const LHCb::Particle* ph = *ip;
+    if ( ph->proto() == NULL ) continue;
+    const SmartRefVector<LHCb::CaloHypo>& calovect = ph->proto()->calo();
+    if ( calovect.empty() ) continue;
+    SmartRefVector<LHCb::CaloHypo>::const_iterator icalo  = calovect.begin(); // take only first calohypo
+    const LHCb::CaloHypo*                          caloph = ( *icalo );
+    const LHCb::CaloHypo::Position*                gpos   = caloph->position();
+    if ( gpos == NULL ) continue;
+
+    const LHCb::CaloPosition::Spread& poscov = gpos->spread();
+
+    photon_x.push_back(   gpos->x() );
+    photon_y.push_back(   gpos->y() );
+    photon_sprx.push_back( poscov( LHCb::CaloPosition::X, LHCb::CaloPosition::X ) );
+    photon_spry.push_back( poscov( LHCb::CaloPosition::Y, LHCb::CaloPosition::Y ) );
+    photon_CL.push_back(  ph -> confLevel() );  // BremAdder default cut is at 0.1
+    photon_PT.push_back(  ph -> pt() );         // BremAdder default cut is at 75.
+
+  }
+
+  test &= tuple -> farray ( "ECAL_photon_x_arr",    photon_x,    "N_ECAL_photons", 2000 );
+  test &= tuple -> farray ( "ECAL_photon_y_arr",    photon_y,    "N_ECAL_photons", 2000 );
+  test &= tuple -> farray ( "ECAL_photon_sprx_arr", photon_sprx, "N_ECAL_photons", 2000 );
+  test &= tuple -> farray ( "ECAL_photon_spry_arr", photon_spry, "N_ECAL_photons", 2000 );
+  test &= tuple -> farray ( "ECAL_photon_CL_arr",   photon_CL,   "N_ECAL_photons", 2000 );
+  test &= tuple -> farray ( "ECAL_photon_PT_arr",   photon_PT,   "N_ECAL_photons", 2000 );
+
+
   return StatusCode::SUCCESS;
 }
 
