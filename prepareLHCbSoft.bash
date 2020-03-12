@@ -34,6 +34,5 @@ make
 
 cd ..
 
-mkdir input
 mkdir output
 
