@@ -8,9 +8,13 @@
 #lb-run LHCbDirac dirac-dms-get-file /lhcb/MC/2017/ALLSTREAMS.DST/00091955/0000/00091955_00000001_7.AllStreams.dst
 #mv *.dst input/
 
-# Run DaVinci
-./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job-Bd2Kstee.py
+# Run DaVinci locally
+#./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job-Bd2Kstee.py input/inputLocalFile.py
 
 #run analysis
 #lb-run ROOT python analysis/plotEcal.py
+
+# Run DaVinci on grid
+ganga options/Ganga-Job-Bd2Kstee.py
+
 

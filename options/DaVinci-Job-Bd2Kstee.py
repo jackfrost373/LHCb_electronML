@@ -59,11 +59,11 @@ DaVinci().PrintFreq = 100
 DaVinci().EvtMax = 10000
 DaVinci().InputType="DST"
 
-# input
-from GaudiConf import IOHelper
-IOHelper('ROOT').inputFiles(['PFN:input/00091955_00000001_7.AllStreams.dst'], clear=True)
+# output (local)
+#DaVinci().TupleFile = "output/DaVinci_{0}.root".format(fname)
+#DaVinci().HistogramFile = 'output/DaVinci_{0}-histos.root'.format(fname)
 
-# output
-DaVinci().TupleFile = "output/DaVinci_{0}.root".format(fname)
-DaVinci().HistogramFile = 'output/DaVinci_{0}-histos.root'.format(fname)
+# output (grid)
+DaVinci().TupleFile = "DaVinci_{0}.root".format(fname)
+DaVinci().HistogramFile = 'DaVinci_{0}-histos.root'.format(fname)
 
