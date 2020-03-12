@@ -1,2 +1,4 @@
 # LHCb_electronML
-machine learning on electrons in LHCb
+Improving electron recovery at the LHCb @ LHC.
+
+
