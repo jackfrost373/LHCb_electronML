@@ -1,4 +1,5 @@
 # LHCb_electronML
-Improving electron recovery at the LHCb @ LHC.
+
+Tools to study improving electron reconstruction (specifically brehmstrahlung recovery) at LHCb with machine learning.
 
 

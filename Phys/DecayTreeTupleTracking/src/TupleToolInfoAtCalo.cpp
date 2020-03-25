@@ -96,25 +96,33 @@ StatusCode TupleToolInfoAtCalo::fill( const LHCb::Particle*, const LHCb::Particl
   double         Hesse = plane.HesseDistance();
   double m_z0          = -Hesse / plane.Normal().Z();
 
-  std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> fromV = getPos( protop, LHCb::State::ClosestToBeam, m_z0 );
-  std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> fromT = getPos( protop, LHCb::State::AtTT, m_z0, (double)StateParameters::ZEndTT );
-  if (!( fromV.first.z() == -1 * Gaudi::Units::km || fromT.first.z() == -1 * Gaudi::Units::km )) {
+  Gaudi::XYZPoint     pfromVelo, pfromTT;
+  Gaudi::SymMatrix3x3 cfromVelo, cfromTT;
+  Gaudi::XYZPoint     originVelo, originTT;
+  std::tie( pfromVelo, cfromVelo, originVelo ) = getPos( protop, LHCb::State::ClosestToBeam, m_z0 );
+  std::tie( pfromTT,   cfromTT,   originTT   ) = getPos( protop, LHCb::State::AtTT, m_z0, (double)StateParameters::ZEndTT );
   
-    Gaudi::XYZPoint     pfromVelo = fromV.first;
-    Gaudi::XYZPoint     pfromTT   = fromT.first;
-    Gaudi::SymMatrix3x3 cfromVelo = fromV.second;
-    Gaudi::SymMatrix3x3 cfromTT   = fromT.second;
+  if (!( pfromVelo.z() == -1 * Gaudi::Units::km || pfromTT.z() == -1 * Gaudi::Units::km )) {
 
     test &= tuple -> column( prefix + "_ECAL_velotrack_x", pfromVelo.X() );
     test &= tuple -> column( prefix + "_ECAL_velotrack_y", pfromVelo.Y() );
     test &= tuple -> column( prefix + "_ECAL_velotrack_sprx", cfromVelo(0,0) );
     test &= tuple -> column( prefix + "_ECAL_velotrack_spry", cfromVelo(1,1) );
+    test &= tuple -> column( prefix + "_velostate_x", originVelo.X() );
+    test &= tuple -> column( prefix + "_velostate_y", originVelo.Y() );
+    test &= tuple -> column( prefix + "_velostate_z", originVelo.Z() );
     test &= tuple -> column( prefix + "_ECAL_TTtrack_x",   pfromTT.X() );
     test &= tuple -> column( prefix + "_ECAL_TTtrack_y",   pfromTT.Y() );
     test &= tuple -> column( prefix + "_ECAL_TTtrack_sprx", cfromTT(0,0) );
     test &= tuple -> column( prefix + "_ECAL_TTtrack_spry", cfromTT(1,1) );
+    test &= tuple -> column( prefix + "_TTstate_x", originTT.X() );
+    test &= tuple -> column( prefix + "_TTstate_y", originTT.Y() );
+    test &= tuple -> column( prefix + "_TTstate_z", originTT.Z() );
 
   }
+
+  //std::vector<double> zPosi{ 0, 1000, 2000, 3000, 4000, 5000, 6000, 7000 };
+  //addTrackPositions( protop, zPosi, tuple );
 
 
   return StatusCode::SUCCESS;
@@ -168,7 +176,7 @@ const LHCb::State* TupleToolInfoAtCalo::usedState( const LHCb::Track* track ) co
 
 
 
-const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> TupleToolInfoAtCalo::getPos( const LHCb::ProtoParticle*   proto,
+const std::tuple<Gaudi::XYZPoint, Gaudi::SymMatrix3x3, Gaudi::XYZPoint> TupleToolInfoAtCalo::getPos( const LHCb::ProtoParticle*   proto,
                                                                          const LHCb::State::Location& lstate,
                                                                          double zcalo, double def ) const {
   // shamelessly stolen from https://gitlab.cern.ch/lhcb/Phys/blob/run2-patches/Phys/DaVinciNeutralTools/src/BremAdder.cpp 
@@ -187,11 +195,11 @@ const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> TupleToolInfoAtCalo::getPo
       nstate.setLocation( lstate );
       if ( sc.isFailure() ) {
         Warning( "Extrapolator failed" ).ignore();
-        return std::make_pair( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3() );
+        return std::make_tuple( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3(),Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ) );
       }
     } else if ( state == NULL ) {
       Warning( "State points to NULL" ).ignore();
-      return std::make_pair( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3() );
+      return std::make_tuple( Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ), Gaudi::SymMatrix3x3(),Gaudi::XYZPoint( 0, 0, -1 * Gaudi::Units::km ) );
     } else
       nstate = *state;
   }
@@ -203,10 +211,33 @@ const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3> TupleToolInfoAtCalo::getPo
   double              y     = nstate.y() + ty * ( zcalo - nstate.z() );
   Gaudi::XYZPoint     point = Gaudi::XYZPoint( x, y, zcalo );
   Gaudi::SymMatrix3x3 cov = nstate.errPosition() + ( zcalo - nstate.z() ) * ( zcalo - nstate.z() ) * nstate.errSlopes();
-  return std::make_pair( point, cov );
+  Gaudi::XYZPoint     origin = Gaudi::XYZPoint( nstate.x(), nstate.y(), nstate.z() );
+  return std::make_tuple( point, cov , origin );
 }
 
 
+
+void TupleToolInfoAtCalo::addTrackPositions( const LHCb::ProtoParticle* proto, std::vector<double> zLocs, Tuples::Tuple& tuple ) {
+  // fill various XYZ points the track passes. Requires the states to exist so not the best way to do it.
+  
+  const LHCb::Track* tr = proto -> track();
+
+  std::vector<double> trackxposi, trackyposi, trackzposi;
+  
+  for( std::vector<double>::iterator it = zLocs.begin(); it != zLocs.end(); ++it ) {
+    double zLoc = *it;
+    LHCb::State thisstate = tr->closestState( zLoc );
+    trackxposi.push_back( thisstate.x() );
+    trackyposi.push_back( thisstate.y() );
+    trackzposi.push_back( thisstate.z() );
+  }
+  
+  tuple -> farray ( "track_poslist_x" , trackxposi, "N_track_positionpoints", 20 );
+  tuple -> farray ( "track_poslist_y" , trackyposi, "N_track_positionpoints", 20 );
+  tuple -> farray ( "track_poslist_z" , trackzposi, "N_track_positionpoints", 20 );
+
+}
+    
 
 
 

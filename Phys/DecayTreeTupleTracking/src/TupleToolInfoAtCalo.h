@@ -53,8 +53,9 @@ private:
   Gaudi::XYZPoint positionAtEcal( const LHCb::Track* ) ;
   
   const LHCb::State*    usedState( const LHCb::Track* track ) const;
-  const std::pair<Gaudi::XYZPoint, Gaudi::SymMatrix3x3>
+  const std::tuple<Gaudi::XYZPoint, Gaudi::SymMatrix3x3, Gaudi::XYZPoint>
                           getPos( const LHCb::ProtoParticle* proto, const LHCb::State::Location& state, double zcalo, double def = 0 ) const;
+  void addTrackPositions( const LHCb::ProtoParticle* proto, std::vector<double> zLocs, Tuples::Tuple& tuple );
 
 };
 
