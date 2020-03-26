@@ -89,6 +89,7 @@ StatusCode TupleToolInfoAtCalo::fill( const LHCb::Particle*, const LHCb::Particl
   const auto caloXYZ = TupleToolInfoAtCalo::positionAtEcal( track );
   test &= tuple -> column( prefix + "_ECAL_x", caloXYZ.X() );
   test &= tuple -> column( prefix + "_ECAL_y", caloXYZ.Y() );
+  test &= tuple -> column( prefix + "_ECAL_z", caloXYZ.Z() );
 
 
   // Get position of Velo and TT extrapolated track at ECAL
@@ -144,6 +145,11 @@ Gaudi::XYZPoint TupleToolInfoAtCalo::positionAtEcal( const LHCb::Track* track ) 
   if ( sc.isFailure() ) return caloXYZpoint;
 
   caloXYZpoint = Gaudi::XYZPoint( calostate.x(), calostate.y(), calostate.z() ); 
+
+  // plane = a*x+b*y+c*z+d=0
+  //double refplaneZ = - refPlane.D() / refPlane.C();
+  //info() << "Z of ShowerMax    = " << refplaneZ << endmsg;
+  //info() << "Z of closeststate = " << calostate.z() << endmsg; 
 
   return caloXYZpoint; 
 
