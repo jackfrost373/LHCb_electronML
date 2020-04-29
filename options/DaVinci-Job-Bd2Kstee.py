@@ -8,7 +8,8 @@ from Gaudi.Configuration import *
 
 # Use same tags as production 
 LHCbApp().DDDBtag = 'dddb-20170721-3'
-LHCbApp().CondDBtag = 'sim-20190430-1-vc-mu100'
+#LHCbApp().CondDBtag = 'sim-20190430-1-vc-mu100'
+LHCbApp().CondDBtag = 'sim-20190430-1-vc-md100'
 LHCbApp().Simulation = True
 
 stream = "AllStreams" # MC: AllStreams
@@ -56,7 +57,8 @@ DaVinci().DataType = '2017'
 DaVinci().Lumi = not DaVinci().Simulation
 DaVinci().appendToMainSequence([tup])
 DaVinci().PrintFreq = 100
-DaVinci().EvtMax = 10000
+#DaVinci().EvtMax = 10000
+DaVinci().EvtMax = -1
 DaVinci().InputType="DST"
 
 # output (local)

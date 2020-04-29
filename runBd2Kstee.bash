@@ -9,13 +9,13 @@
 #mv *.dst input/
 
 # Run DaVinci locally
-./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job-Bd2Kstee.py input/inputLocalFile.py
-mv *.root output/
+#./DaVinciDev_v45r2/run gaudirun.py options/DaVinci-Job-Bd2Kstee.py input/inputLocalFile.py
+#mv *.root output/
 
 #run analysis
 #lb-run ROOT python analysis/plotEcal.py
 
-# Run DaVinci on grid
-#ganga options/Ganga-Job-Bd2Kstee.py
+# Run DaVinci on grid. Make sure DaVinci().EvtMax is set to -1
+ganga options/Ganga-Job-Bd2Kstee.py
 
 

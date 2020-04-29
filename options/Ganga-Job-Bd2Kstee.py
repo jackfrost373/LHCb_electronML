@@ -1,11 +1,11 @@
 
+mag = "Down"
 
+dataloc = "/MC/2017/Beam6500GeV-2017-Mag{0}-Nu1.6-25ns-Pythia8/Sim09g/Trig0x62661709/Reco17/Turbo04a-WithTurcal/Stripping29r2NoPrescalingFlagged/11124002/ALLSTREAMS.DST".format(mag)
 
-dataloc = "/MC/2017/Beam6500GeV-2017-MagUp-Nu1.6-25ns-Pythia8/Sim09g/Trig0x62661709/Reco17/Turbo04a-WithTurcal/Stripping29r2NoPrescalingFlagged/11124002/ALLSTREAMS.DST"
-
-jobname = "MC_Bd2Kstee_MagUp_Pythia8_2017"
+jobname = "MC_Bd2Kstee_Mag{0}_Pythia8_2017".format(mag)
 j = Job(name=jobname)
-j.comment = "MagUp_Pythia8_2017"
+j.comment = "Mag{0}_Pythia8_2017".format(mag)
 #j.inputfiles = [ LocalFile('./options/mcdatabase.py') ]
 
 # Set up the required application to run
